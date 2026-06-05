@@ -1,4 +1,4 @@
-import { configureStore, combineReducers } from "@reduxjs/toolkit";
+import { configureStore, combineReducers, UnknownAction } from "@reduxjs/toolkit";
 import { useDispatch, useSelector } from "react-redux";
 import { baseApi } from "./api/baseApi";
 import authReducer from "./slices/authSlice";
@@ -10,7 +10,7 @@ const appReducer = combineReducers({
   chat: chatReducer,
 });
 
-const rootReducer = (state: any, action: any) => {
+const rootReducer = (state: ReturnType<typeof appReducer> | undefined, action: UnknownAction) => {
   if (action.type === "auth/clearCredentials") {
     // Reset all state to undefined, which forces reducers to return their initial state
     state = undefined;

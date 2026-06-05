@@ -45,15 +45,13 @@ export default function ProfileDrawer({
   const [deleteDocument] = useDeleteDocumentMutation();
 
   const analytics = profileData?.analytics;
-  const docs = docsData?.documents ?? [];
 
-  const filteredDocs = useMemo(
-    () =>
-      docs.filter((d) =>
-        d.name.toLowerCase().includes(searchQuery.toLowerCase())
-      ),
-    [docs, searchQuery]
-  );
+  const filteredDocs = useMemo(() => {
+    const docs = docsData?.documents ?? [];
+    return docs.filter((d) =>
+      d.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [docsData?.documents, searchQuery]);
 
   const handleDeleteDoc = async (id: string) => {
     try {

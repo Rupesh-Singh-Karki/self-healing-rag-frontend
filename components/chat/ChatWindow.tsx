@@ -18,12 +18,10 @@ export default function ChatWindow({
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages
+  const lastMessageContent = messages.length > 0 ? messages[messages.length - 1].content : "";
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [
-    messages,
-    messages.length > 0 ? messages[messages.length - 1].content : "",
-  ]);
+  }, [messages, lastMessageContent]);
 
   return (
     <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-6 py-6">

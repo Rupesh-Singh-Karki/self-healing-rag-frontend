@@ -71,6 +71,7 @@ export default function SessionPage() {
       // Auto-select the last assistant message
       const lastAssistant = [...mapped].reverse().find((m) => m.role === "assistant");
       if (lastAssistant) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelectedMessageId(lastAssistant.id);
       }
     }
