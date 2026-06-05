@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, DM_Sans, Geist_Mono } from "next/font/google";
+import StoreProvider from "@/store/StoreProvider";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -37,9 +38,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${bricolage.variable} ${dmSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body suppressHydrationWarning className="min-h-full">
+        <StoreProvider>{children}</StoreProvider>
+      </body>
     </html>
   );
 }

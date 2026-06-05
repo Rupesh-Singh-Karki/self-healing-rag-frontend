@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { AlertCircle } from "lucide-react";
+import { useState, useEffect, MouseEvent } from "react";
+import { AlertCircle, Copy, Check } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { Message } from "@/types";
 
 interface MessageBubbleProps {
@@ -10,43 +11,62 @@ interface MessageBubbleProps {
   onSelect?: () => void;
 }
 
+function TypewriterEffect({ content, isStreaming }: { content: string; isStreaming: boolean }) {
+  // Strip out JSON metadata appended to the end of the content string
+  const cleanContent = content.replace(/\{"confidence".*?\}$/, '');
+  const [displayedContent, setDisplayedContent] = useState(() => isStreaming ? "" : cleanContent);
+
+  if (!isStreaming && displayedContent !== cleanContent) {
+    setDisplayedContent(cleanContent);
+  }
+
+  useEffect(() => {
+    if (!isStreaming) return;
+    
+    const diff = cleanContent.length - displayedContent.length;
+    if (diff > 0) {
+      const step = Math.max(1, Math.floor(diff / 4));
+      const timer = setTimeout(() => {
+        setDisplayedContent(prev => cleanContent.slice(0, prev.length + step));
+      }, 15);
+      return () => clearTimeout(timer);
+    }
+  }, [cleanContent, displayedContent, isStreaming]);
+
+  return <ReactMarkdown>{displayedContent}</ReactMarkdown>;
+}
+
 export default function MessageBubble({
   message,
   isStreaming = false,
   onSelect,
 }: MessageBubbleProps) {
-  const [showTimestamp, setShowTimestamp] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (e: MouseEvent) => {
+    e.stopPropagation();
+    // Strip JSON metadata before copying to clipboard
+    const textToCopy = message.content.replace(/\{"confidence".*?\}$/, '');
+    navigator.clipboard.writeText(textToCopy);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (message.role === "user") {
     return (
-      <div
-        className="flex justify-end"
-        onMouseEnter={() => setShowTimestamp(true)}
-        onMouseLeave={() => setShowTimestamp(false)}
-      >
-        <div className="max-w-[70%]">
+      <div className="flex justify-end">
+        <div className="ml-auto max-w-[65%]">
           <div
             className="rounded-xl rounded-br-sm px-4 py-3"
             style={{ backgroundColor: "var(--bg-raised)" }}
           >
             <p
               className="font-body text-[14px]"
-              style={{ color: "var(--text-primary)" }}
+              style={{ color: "var(--text-primary)", whiteSpace: "pre-wrap" }}
             >
               {message.content}
             </p>
           </div>
-          {showTimestamp && (
-            <p
-              className="mt-1 text-right font-mono text-[11px]"
-              style={{ color: "var(--text-muted)" }}
-            >
-              {message.timestamp.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </p>
-          )}
         </div>
       </div>
     );
@@ -68,13 +88,23 @@ export default function MessageBubble({
   const sourcesCount = message.sources?.length ?? 0;
   const confidence = message.critic?.score;
   const retries = message.retries ?? 0;
+  
+  // Also strip for non-streaming fast-path
+  const staticCleanContent = message.content.replace(/\{"confidence".*?\}$/, '');
 
   return (
     <div className="flex justify-start">
-      <button
-        type="button"
-        className="max-w-[80%] cursor-pointer border-none bg-transparent p-0 text-left"
+      <div
+        role="button"
+        tabIndex={0}
+        className="w-full cursor-pointer border-none bg-transparent p-0 text-left focus:outline-none"
         onClick={onSelect}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onSelect?.();
+          }
+        }}
         aria-label="View message details"
       >
         <div
@@ -90,53 +120,100 @@ export default function MessageBubble({
                 style={{ color: "var(--status-fail)" }}
               />
             )}
-            <p
-              className="font-body text-[14px] leading-relaxed"
+            <div
+              className="font-body w-full min-h-[24px]"
               style={{
                 color: isRefused
                   ? "var(--text-secondary)"
                   : "var(--text-primary)",
               }}
             >
-              {message.content}
-              {isStreaming && message.final_status === "in_progress" && (
-                <span
-                  className="ml-0.5 inline-block animate-[blink-cursor_1s_step-end_infinite]"
-                  style={{ color: "var(--accent)" }}
-                >
-                  |
-                </span>
+              {!message.content && isStreaming && message.final_status === "in_progress" ? (
+                <div className="flex items-center gap-1 h-5 pt-2 ml-1 opacity-60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              ) : (
+                <div className="prose prose-sm max-w-none text-[14px] leading-relaxed dark:prose-invert" style={{ color: "inherit" }}>
+                  {isStreaming ? (
+                    <TypewriterEffect content={message.content} isStreaming={isStreaming} />
+                  ) : (
+                    <ReactMarkdown>{staticCleanContent}</ReactMarkdown>
+                  )}
+                  {isStreaming && message.final_status === "in_progress" && (
+                    <span
+                      className="ml-0.5 inline-block animate-[blink-cursor_1s_step-end_infinite]"
+                      style={{ color: "var(--accent)" }}
+                    >
+                      |
+                    </span>
+                  )}
+                </div>
               )}
-            </p>
+            </div>
           </div>
 
           {/* Meta row */}
           {message.final_status !== "in_progress" && (
             <div
-              className="mt-2 flex items-center gap-1 font-mono text-[11px]"
-              style={{ color: "var(--text-muted)" }}
+              className="mt-2 flex items-center justify-between"
             >
-              {confidence !== undefined && (
-                <>
-                  <span>{(confidence * 100).toFixed(0)}% confidence</span>
-                  <span aria-hidden="true"> · </span>
-                </>
-              )}
-              <span>
-                {retries} {retries === 1 ? "retry" : "retries"}
-              </span>
-              <span aria-hidden="true"> · </span>
-              {isRefused ? (
-                <span style={{ color: "var(--status-fail)" }}>refused</span>
-              ) : (
+              <div 
+                className="flex items-center gap-1 font-mono text-[11px]"
+                style={{ color: "var(--text-muted)" }}
+              >
+                {confidence !== undefined && (
+                  <>
+                    <span>{(confidence * 100).toFixed(0)}% confidence</span>
+                    <span aria-hidden="true"> · </span>
+                  </>
+                )}
                 <span>
-                  {sourcesCount} {sourcesCount === 1 ? "source" : "sources"}
+                  {retries} {retries === 1 ? "retry" : "retries"}
                 </span>
-              )}
+                <span aria-hidden="true"> · </span>
+                {isRefused ? (
+                  <span style={{ color: "var(--status-fail)" }}>refused</span>
+                ) : (
+                  <span>
+                    {sourcesCount} {sourcesCount === 1 ? "source" : "sources"}
+                  </span>
+                )}
+              </div>
+              
+              <div 
+                className="flex items-center gap-3 font-mono text-[11px]"
+                style={{ color: "var(--text-muted)" }}
+              >
+                <span>
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="flex h-6 w-6 items-center justify-center rounded transition-colors duration-150"
+                  style={{ color: "var(--text-muted)" }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "var(--bg-raised)";
+                    e.currentTarget.style.color = "var(--text-primary)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                    e.currentTarget.style.color = "var(--text-muted)";
+                  }}
+                  aria-label="Copy response"
+                >
+                  {copied ? <Check size={12} strokeWidth={1.5} /> : <Copy size={12} strokeWidth={1.5} />}
+                </button>
+              </div>
             </div>
           )}
         </div>
-      </button>
+      </div>
     </div>
   );
 }

@@ -27,10 +27,62 @@ export type Message = {
   critic?: CriticResult;
   trace?: TraceStep[];
   retries?: number;
-  final_status?: "returned" | "refused" | "in_progress";
+  final_status?: "returned" | "refused" | "retried" | "in_progress";
 };
 
 export type StreamingState = {
   status: "idle" | "streaming" | "done" | "error";
   activeNode?: string;
+};
+
+// ─── API Response Types ───
+
+export type User = {
+  id: string;
+  fullName: string;
+  email: string;
+  joinedAt: string;
+  avatarInitials: string;
+};
+
+export type Session = {
+  id: string;
+  title: string;
+  lastMessage: string;
+  timestamp: string;
+  messageCount: number;
+};
+
+export type LandingData = {
+  indexedDocumentCount: number;
+  suggestions: string[];
+};
+
+export type Analytics = {
+  totalSessions: number;
+  totalQueries: number;
+  avgConfidence: number;
+  approvedAnswers: number;
+  retriedAnswers: number;
+  refusedAnswers: number;
+  docsIndexed: number;
+  totalChunksIndexed: number;
+};
+
+export type DocumentItem = {
+  id: string;
+  name: string;
+  size: string;
+  pages: number;
+  chunks: number;
+  uploadedAt: string;
+  status: string;
+  downloadUrl: string;
+};
+
+export type IndexedDocument = {
+  name: string;
+  pages: number;
+  chunks: number;
+  status: string;
 };

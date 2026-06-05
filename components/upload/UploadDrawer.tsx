@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
-import { X, Upload, FileText } from "lucide-react";
+import { X, Upload, FileText, Loader2, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { MOCK_INDEXED_DOCS } from "@/lib/mock-data";
+import { useListIndexedDocumentsQuery } from "@/store/api/documentsApi";
+import { useUploadDocumentMutation } from "@/store/api/documentsApi";
 
 interface UploadDrawerProps {
   isOpen: boolean;
@@ -15,6 +16,39 @@ export default function UploadDrawer({ isOpen, onClose }: UploadDrawerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
+  const { data: indexedDocsData } = useListIndexedDocumentsQuery(undefined, {
+    skip: !isOpen,
+  });
+  const [uploadDocument, { isLoading: isUploading }] = useUploadDocumentMutation();
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const indexedDocs = indexedDocsData?.documents ?? [];
+
+  const handleFiles = useCallback(
+    async (files: FileList | null) => {
+      if (!files || files.length === 0) return;
+
+      setUploadError(null);
+      setUploadSuccess(null);
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          await uploadDocument(formData).unwrap();
+          setUploadSuccess(file.name);
+          setTimeout(() => setUploadSuccess(null), 3000);
+        } catch {
+          setUploadError(`Failed to upload ${file.name}`);
+        }
+      }
+    },
+    [uploadDocument]
+  );
+
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -25,11 +59,23 @@ export default function UploadDrawer({ isOpen, onClose }: UploadDrawerProps) {
     setIsDragOver(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    // Mock — no actual file handling yet
-  }, []);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      handleFiles(e.dataTransfer.files);
+    },
+    [handleFiles]
+  );
+
+  const handleFileInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      handleFiles(e.target.files);
+      // Reset input so same file can be re-uploaded
+      e.target.value = "";
+    },
+    [handleFiles]
+  );
 
   const easing = [0.32, 0.72, 0, 1] as const;
 
@@ -96,7 +142,8 @@ export default function UploadDrawer({ isOpen, onClose }: UploadDrawerProps) {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className="flex w-full cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed px-6 py-10 transition-all duration-150"
+                disabled={isUploading}
+                className="flex w-full cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed px-6 py-10 transition-all duration-150 disabled:opacity-60"
                 style={{
                   borderColor: isDragOver
                     ? "var(--accent)"
@@ -106,23 +153,32 @@ export default function UploadDrawer({ isOpen, onClose }: UploadDrawerProps) {
                     : "transparent",
                 }}
               >
-                <Upload
-                  size={32}
-                  strokeWidth={1.5}
-                  style={{ color: "var(--text-muted)" }}
-                />
+                {isUploading ? (
+                  <Loader2
+                    size={32}
+                    strokeWidth={1.5}
+                    className="animate-spin"
+                    style={{ color: "var(--accent)" }}
+                  />
+                ) : (
+                  <Upload
+                    size={32}
+                    strokeWidth={1.5}
+                    style={{ color: "var(--text-muted)" }}
+                  />
+                )}
                 <div className="flex flex-col items-center gap-1">
                   <span
                     className="font-body text-[14px]"
                     style={{ color: "var(--text-primary)" }}
                   >
-                    Drop PDF files here
+                    {isUploading ? "Uploading..." : "Drop files here"}
                   </span>
                   <span
                     className="font-body text-[13px]"
                     style={{ color: "var(--text-muted)" }}
                   >
-                    or click to browse
+                    PDF, TXT, CSV, JSON, MD, DOCX
                   </span>
                 </div>
               </button>
@@ -130,11 +186,29 @@ export default function UploadDrawer({ isOpen, onClose }: UploadDrawerProps) {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="application/pdf"
+                accept=".pdf,.txt,.csv,.json,.md,.docx"
                 className="hidden"
                 multiple
+                onChange={handleFileInputChange}
                 aria-hidden="true"
               />
+
+              {/* Upload feedback */}
+              {uploadSuccess && (
+                <div className="mt-3 flex items-center gap-2 rounded-lg px-3 py-2" style={{ backgroundColor: "rgba(74, 222, 128, 0.1)" }}>
+                  <CheckCircle2 size={14} strokeWidth={1.5} style={{ color: "var(--status-ok)" }} />
+                  <span className="font-body text-[13px]" style={{ color: "var(--status-ok)" }}>
+                    {uploadSuccess} uploaded
+                  </span>
+                </div>
+              )}
+              {uploadError && (
+                <div className="mt-3 flex items-center gap-2 rounded-lg px-3 py-2" style={{ backgroundColor: "rgba(248, 113, 113, 0.1)" }}>
+                  <span className="font-body text-[13px]" style={{ color: "var(--status-fail)" }}>
+                    {uploadError}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Indexed documents list */}
@@ -147,7 +221,7 @@ export default function UploadDrawer({ isOpen, onClose }: UploadDrawerProps) {
               </h3>
 
               <div className="flex flex-col gap-1">
-                {MOCK_INDEXED_DOCS.map((doc) => (
+                {indexedDocs.map((doc) => (
                   <div
                     key={doc.name}
                     className="flex items-center justify-between rounded-lg px-3 py-2.5"
@@ -183,11 +257,24 @@ export default function UploadDrawer({ isOpen, onClose }: UploadDrawerProps) {
                       </span>
                       <span
                         className="inline-block h-2 w-2 rounded-full"
-                        style={{ backgroundColor: "var(--status-ok)" }}
+                        style={{
+                          backgroundColor:
+                            doc.status === "indexed"
+                              ? "var(--status-ok)"
+                              : "var(--status-warn)",
+                        }}
                       />
                     </div>
                   </div>
                 ))}
+                {indexedDocs.length === 0 && (
+                  <p
+                    className="py-6 text-center font-body text-[13px]"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    No indexed documents yet
+                  </p>
+                )}
               </div>
             </div>
           </motion.div>
