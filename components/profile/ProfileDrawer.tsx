@@ -7,11 +7,12 @@ import { useAppSelector } from "@/store";
 import { useGetMyProfileQuery } from "@/store/api/profileApi";
 import { useListDocumentsQuery, useDeleteDocumentMutation } from "@/store/api/documentsApi";
 import DocRow from "./DocRow";
+import PipelineDocumentation from "./PipelineDocumentation";
 
 interface ProfileDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  initialTab?: "overview" | "documents";
+  initialTab?: "overview" | "documents" | "pipeline";
 }
 
 export default function ProfileDrawer({
@@ -21,7 +22,7 @@ export default function ProfileDrawer({
 }: ProfileDrawerProps) {
   const shouldReduceMotion = useReducedMotion();
   const user = useAppSelector((state) => state.auth.user);
-  const [activeTab, setActiveTab] = useState<"overview" | "documents">(initialTab);
+  const [activeTab, setActiveTab] = useState<"overview" | "documents" | "pipeline">(initialTab);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Sync initial tab when drawer re-opens
@@ -140,7 +141,7 @@ export default function ProfileDrawer({
               className="flex flex-shrink-0 border-b px-6"
               style={{ borderColor: "var(--bg-border)" }}
             >
-              {(["overview", "documents"] as const).map((tab) => (
+              {(["overview", "documents", "pipeline"] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -165,7 +166,7 @@ export default function ProfileDrawer({
                     }
                   }}
                 >
-                  {tab === "overview" ? "Overview" : "Documents"}
+                  {tab === "overview" ? "Overview" : tab === "documents" ? "Documents" : "Pipeline"}
                 </button>
               ))}
             </div>
@@ -398,6 +399,11 @@ export default function ProfileDrawer({
                     </p>
                   )}
                 </div>
+              </div>
+
+              {/* Pipeline Tab */}
+              <div style={{ display: activeTab === "pipeline" ? "block" : "none" }}>
+                <PipelineDocumentation />
               </div>
             </div>
           </motion.div>

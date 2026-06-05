@@ -109,6 +109,29 @@ export const sessionsApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: { title },
       }),
+      async onQueryStarted({ sessionId, title }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          sessionsApi.util.updateQueryData("listSessions", undefined, (draft) => {
+            const session = draft.sessions.find((s) => s.id === sessionId);
+            if (session) {
+              session.title = title;
+            }
+          })
+        );
+        const patchResult2 = dispatch(
+          sessionsApi.util.updateQueryData("getSessionMessages", sessionId, (draft) => {
+            if (draft.session) {
+              draft.session.title = title;
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+          patchResult2.undo();
+        }
+      },
       invalidatesTags: ["Sessions"],
     }),
 

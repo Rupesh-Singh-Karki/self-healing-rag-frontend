@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Layers, ScanEye, GitBranch, PanelRight, Trash2 } from "lucide-react";
+import { Layers, ScanEye, GitBranch, PanelRight } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Message } from "@/types";
-import { useGetSessionMessagesQuery, useDeleteSessionMutation } from "@/store/api/sessionsApi";
+import { useGetSessionMessagesQuery } from "@/store/api/sessionsApi";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { setMessages, clearMessages } from "@/store/slices/chatSlice";
 import { sendMessage } from "@/store/thunks/sendMessage";
@@ -39,7 +39,6 @@ export default function SessionPage() {
   const { data: sessionData, isLoading: messagesLoading } = useGetSessionMessagesQuery(sessionId, {
     refetchOnMountOrArgChange: true,
   });
-  const [deleteSession] = useDeleteSessionMutation();
 
   // Redux chat state
   const chatState = useAppSelector((state) => state.chat);
@@ -143,15 +142,6 @@ export default function SessionPage() {
     [dispatch, sessionId]
   );
 
-  const handleDelete = useCallback(async () => {
-    try {
-      await deleteSession(sessionId).unwrap();
-      router.push("/chat");
-    } catch {
-      // Error handling
-    }
-  }, [deleteSession, sessionId, router]);
-
   const lastMessage = liveMessages[liveMessages.length - 1];
 
   const selectedMessage = selectedMessageId
@@ -220,23 +210,6 @@ export default function SessionPage() {
               aria-pressed={rightPanelVisible}
             >
               <PanelRight size={15} strokeWidth={1.5} />
-            </button>
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150"
-              style={{ color: "var(--text-muted)" }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "var(--bg-raised)";
-                e.currentTarget.style.color = "var(--text-primary)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = "var(--text-muted)";
-              }}
-              aria-label="Delete session"
-            >
-              <Trash2 size={15} strokeWidth={1.5} />
             </button>
           </div>
         </div>

@@ -75,7 +75,6 @@ export default function SessionItem({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);
-        setMenuOpen(false);
       }}
     >
       <div className="flex items-center gap-2 px-3 py-2">
@@ -140,7 +139,7 @@ export default function SessionItem({
         </div>
 
         {/* More button on hover */}
-        {hovered && !isRenaming && (
+        {(hovered || menuOpen) && !isRenaming && (
           <button
             type="button"
             onClick={(e) => {
