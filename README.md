@@ -82,3 +82,4 @@ Eidos uses a strict "Void-First" color strategy:
 - `accent`: `#2DD4BF` (Electric Teal)
 
 The UI emphasizes depth and atmospheric perspective instead of solid borders, using subtle background color shifts and glows.
+- Rupesh Singh Karki
