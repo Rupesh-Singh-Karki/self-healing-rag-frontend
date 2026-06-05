@@ -59,10 +59,21 @@ Make sure you have Node.js and npm (or yarn/pnpm) installed.
 
 ## 📂 Project Structure
 
-- `app/`: Next.js App Router pages and layouts.
-- `components/`: Reusable UI components (Sidebar, Profile Drawer, Chat interface).
-- `store/`: Redux store configuration and RTK Query API endpoints.
-- `public/`: Static assets like logos and fonts.
+- `app/`: Next.js App Router pages and layouts, including authentication routes (`login`, `signup`) and main application routes (`chat`).
+- `components/`: Reusable UI components organized by feature:
+  - `chat/`: Chat input, chat window, and message bubbles.
+  - `layout/`: Main application layouts and sidebar navigation.
+  - `panels/`: Deep dive panels including Critic, Sources, and Execution Trace.
+  - `profile/`: User profile drawer, document rows, and pipeline information.
+  - `sidebar/`: Sidebar session items, profile card, and menus.
+  - `ui/`: Core UI elements like Confidence Rings and Empty States.
+  - `upload/`: Document upload drawer.
+- `store/`: Redux store configuration and RTK Query endpoints:
+  - `api/`: API services for auth, documents, sessions, and profile.
+  - `slices/`: Global state management for auth and chat.
+  - `thunks/`: Async actions like real-time message handling.
+- `types/`: Global TypeScript interfaces and types.
+- `public/`: Static assets.
 
 ## 🎨 Design System
 Eidos uses a strict "Void-First" color strategy:
