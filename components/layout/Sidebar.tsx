@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Image from "next/image";
 import { SquarePen, Upload } from "lucide-react";
 import { useListSessionsQuery, useRenameSessionMutation, useDeleteSessionMutation } from "@/store/api/sessionsApi";
 import SessionItem from "@/components/sidebar/SessionItem";
@@ -60,7 +61,7 @@ export default function Sidebar({ onUploadClick }: SidebarProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerTab, setDrawerTab] = useState<"overview" | "documents">(
+  const [drawerTab, setDrawerTab] = useState<"overview" | "documents" | "pipeline">(
     "overview"
   );
 
@@ -76,7 +77,7 @@ export default function Sidebar({ onUploadClick }: SidebarProps) {
     ? pathname.split("/chat/")[1]
     : null;
 
-  const handleOpenProfile = (tab: "overview" | "documents" = "overview") => {
+  const handleOpenProfile = (tab: "overview" | "documents" | "pipeline" = "overview") => {
     setDrawerTab(tab);
     setDrawerOpen(true);
   };
@@ -115,44 +116,13 @@ export default function Sidebar({ onUploadClick }: SidebarProps) {
           className="flex h-14 flex-shrink-0 items-center gap-2.5 border-b px-4"
           style={{ borderColor: "var(--bg-border)" }}
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <rect
-              x="2"
-              y="2"
-              width="20"
-              height="20"
-              rx="3"
-              stroke="var(--accent)"
-              strokeWidth="1.5"
-              fill="none"
-            />
-            <rect
-              x="6"
-              y="6"
-              width="12"
-              height="12"
-              rx="2"
-              stroke="var(--accent)"
-              strokeWidth="1.5"
-              fill="var(--accent)"
-              fillOpacity="0.15"
-            />
-            <rect
-              x="9"
-              y="9"
-              width="6"
-              height="6"
-              rx="1"
-              fill="var(--accent)"
-            />
-          </svg>
+          <Image
+            src="/logo.png"
+            alt="Eidos Logo"
+            width={24}
+            height={24}
+            className="rounded-sm object-contain"
+          />
           <span
             className="font-display text-[16px] font-semibold"
             style={{ color: "var(--text-primary)" }}

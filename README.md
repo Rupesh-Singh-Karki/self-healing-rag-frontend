@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Eidos — Self-Healing RAG
 
-## Getting Started
+**Eidos** is an advanced Document Intelligence platform built around a self-healing Retrieval-Augmented Generation (RAG) pipeline. It allows you to upload documents, ask complex questions, and watch as the system fetches context, generates answers, evaluates its own confidence, and automatically re-evaluates if the answer isn't good enough.
 
-First, run the development server:
+## 🌟 What Does This Do?
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Typical AI chat applications rely on a simple prompt-and-response flow. However, when working with complex documents, AI models can hallucinate or miss critical context. 
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Eidos solves this by implementing a **Self-Healing Pipeline**:
+1. **Upload Document**: You upload your PDFs and the system extracts the text.
+2. **Chunking**: The extracted text is intelligently broken down into smaller semantic blocks.
+3. **Vector Retrieval**: When you ask a question, Eidos uses embeddings to find the most relevant chunks from your documents.
+4. **LLM Generation**: An AI model drafts an initial answer based on the retrieved context.
+5. **Critique**: The system evaluates its own answer for confidence and accuracy.
+6. **Self-Healing Loop**: If the system detects low confidence or missing context, it will automatically loop back, adjust its search strategy, retrieve better context, and generate a new answer.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+This guarantees high-accuracy, hallucination-free answers based strictly on the documents you provide.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Features
 
-## Learn More
+- **Sleek, Minimalist Interface**: Designed with a high-end, futuristic dark-mode aesthetic (The Kinetic Architect design system).
+- **Interactive Chat**: Ask questions and chat with your documents in real-time.
+- **Pipeline Visibility**: See exactly what the AI is doing under the hood (Chunking, Retrieval, Generation, Critique).
+- **Document Management**: Manage your uploaded documents and see how many chunks have been indexed.
+- **Analytics & Profile Drawer**: Track your usage statistics, session confidence, and review the pipeline architecture right from your profile.
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠️ Technology Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **State Management**: Redux Toolkit & RTK Query
+- **Fonts**: Bricolage Grotesque, DM Sans, and Geist Mono
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ⚙️ Getting Started
 
-## Deploy on Vercel
+### Prerequisites
+Make sure you have Node.js and npm (or yarn/pnpm) installed.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Installation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details. Testing
+1. Clone the repository and navigate to the project directory:
+   ```bash
+   cd self-healing-rag-frontend
+   ```
+
+2. Install the dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## 📂 Project Structure
+
+- `app/`: Next.js App Router pages and layouts.
+- `components/`: Reusable UI components (Sidebar, Profile Drawer, Chat interface).
+- `store/`: Redux store configuration and RTK Query API endpoints.
+- `public/`: Static assets like logos and fonts.
+
+## 🎨 Design System
+Eidos uses a strict "Void-First" color strategy:
+- `bg-root`: `#0A0A0A`
+- `bg-surface`: `#111111`
+- `accent`: `#2DD4BF` (Electric Teal)
+
+The UI emphasizes depth and atmospheric perspective instead of solid borders, using subtle background color shifts and glows.

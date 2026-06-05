@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { UserCircle, FolderOpen, LogOut } from "lucide-react";
+import { UserCircle, FolderOpen, LogOut, Network } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/store";
@@ -11,7 +11,7 @@ import { useLogoutMutation } from "@/store/api/authApi";
 interface ProfileMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  onOpenProfile: (tab?: "overview" | "documents") => void;
+  onOpenProfile: (tab?: "overview" | "documents" | "pipeline") => void;
 }
 
 export default function ProfileMenu({
@@ -108,6 +108,14 @@ export default function ProfileMenu({
               onClick={() => {
                 onClose();
                 onOpenProfile("documents");
+              }}
+            />
+            <MenuButton
+              icon={Network}
+              label="Pipeline documentation"
+              onClick={() => {
+                onClose();
+                onOpenProfile("pipeline");
               }}
             />
           </div>

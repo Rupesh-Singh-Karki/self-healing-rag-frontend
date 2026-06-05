@@ -11,9 +11,14 @@ interface MessageBubbleProps {
   onSelect?: () => void;
 }
 
+const cleanText = (text: string) => {
+  if (!text) return "";
+  return text.replace(/\{"confidence"\s*:[^}]+\}/g, '').trim();
+};
+
 function TypewriterEffect({ content, isStreaming }: { content: string; isStreaming: boolean }) {
-  // Strip out JSON metadata appended to the end of the content string
-  const cleanContent = content.replace(/\{"confidence".*?\}$/, '');
+  // Strip out JSON metadata appended anywhere in the content string
+  const cleanContent = cleanText(content);
   const [displayedContent, setDisplayedContent] = useState(() => isStreaming ? "" : cleanContent);
 
   if (!isStreaming && displayedContent !== cleanContent) {
@@ -46,7 +51,7 @@ export default function MessageBubble({
   const handleCopy = (e: MouseEvent) => {
     e.stopPropagation();
     // Strip JSON metadata before copying to clipboard
-    const textToCopy = message.content.replace(/\{"confidence".*?\}$/, '');
+    const textToCopy = cleanText(message.content);
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -90,7 +95,7 @@ export default function MessageBubble({
   const retries = message.retries ?? 0;
   
   // Also strip for non-streaming fast-path
-  const staticCleanContent = message.content.replace(/\{"confidence".*?\}$/, '');
+  const staticCleanContent = cleanText(message.content);
 
   return (
     <div className="flex justify-start">
@@ -136,6 +141,16 @@ export default function MessageBubble({
                 </div>
               ) : (
                 <div className="prose prose-sm max-w-none text-[14px] leading-relaxed dark:prose-invert" style={{ color: "inherit" }}>
+                  {isRefused && (
+                    <div className="mb-2 font-medium text-[13px] flex items-center gap-1.5" style={{ color: "var(--status-fail)" }}>
+                      Response Refused
+                      {message.critic?.issues && message.critic.issues.length > 0 && (
+                        <span className="font-normal opacity-80">
+                          — {message.critic.issues.join(', ').replace(/_/g, ' ')}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   {isStreaming ? (
                     <TypewriterEffect content={message.content} isStreaming={isStreaming} />
                   ) : (

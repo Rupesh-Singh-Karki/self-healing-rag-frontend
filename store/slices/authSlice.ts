@@ -57,12 +57,14 @@ const authSlice = createSlice({
         "auth_user",
         JSON.stringify(action.payload.user)
       );
+      state.isHydrated = true;
     },
     clearCredentials(state) {
       state.token = null;
       state.user = null;
       localStorage.removeItem("auth_token");
       localStorage.removeItem("auth_user");
+      state.isHydrated = true;
     },
   },
 });
