@@ -1,13 +1,15 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
-import { ArrowUp, Loader2 } from "lucide-react";
+import { useRef, useCallback } from "react";
+import { Plus, ArrowUp, Loader2 } from "lucide-react";
 
 interface ChatInputProps {
   onSubmit: (message: string) => void;
   isStreaming: boolean;
   value: string;
   onChange: (value: string) => void;
+  onUploadClick?: () => void;
+  showHint?: boolean;
 }
 
 export default function ChatInput({
@@ -15,37 +17,19 @@ export default function ChatInput({
   isStreaming,
   value,
   onChange,
+  onUploadClick,
+  showHint = false,
 }: ChatInputProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const canSend = value.trim().length > 0 && !isStreaming;
 
-  // Auto-resize textarea
-  const adjustHeight = useCallback(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    textarea.style.height = "auto";
-    const lineHeight = 22;
-    const maxHeight = lineHeight * 5 + 24; // 5 lines + padding
-    textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
-  }, []);
-
-  useEffect(() => {
-    adjustHeight();
-  }, [value, adjustHeight]);
-
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (!canSend) return;
     onSubmit(value.trim());
     onChange("");
-    // Reset height after clearing
-    requestAnimationFrame(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-      }
-    });
-  };
+  }, [canSend, value, onSubmit, onChange]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
@@ -53,76 +37,103 @@ export default function ChatInput({
   };
 
   return (
-    <div
-      className="flex-shrink-0 border-t px-6 py-4"
-      style={{
-        backgroundColor: "var(--bg-root)",
-        borderColor: "var(--bg-border)",
-      }}
-    >
-      <div className="flex items-end gap-3">
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask a question about your documents..."
-          rows={1}
-          className="flex-1 resize-none rounded-lg border px-4 py-3 font-body text-[14px] transition-colors duration-150 focus:ring-1"
-          style={
-            {
-              backgroundColor: "var(--bg-raised)",
-              borderColor: "var(--bg-border)",
-              color: "var(--text-primary)",
-              "--tw-ring-color": "var(--accent)",
-              outline: "none",
-            } as React.CSSProperties
-          }
-          onFocus={(e) =>
-            (e.currentTarget.style.borderColor = "var(--accent)")
-          }
-          onBlur={(e) =>
-            (e.currentTarget.style.borderColor = "var(--bg-border)")
-          }
-          disabled={isStreaming}
-          aria-label="Message input"
-          id="chat-input"
-        />
+    <div className="flex-shrink-0 px-6 pt-3 pb-6">
+      <div className="mx-auto w-full max-w-[720px]">
+        {/* Single-line input bar */}
+        <div
+          className="flex h-12 items-center rounded-xl border"
+          style={{
+            backgroundColor: "var(--bg-surface)",
+            borderColor: "var(--bg-border)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+          }}
+        >
+          {/* Upload / Plus button */}
+          {onUploadClick && (
+            <button
+              type="button"
+              onClick={onUploadClick}
+              className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-l-xl transition-colors duration-150"
+              style={{ color: "var(--text-muted)" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--bg-raised)";
+                e.currentTarget.style.color = "var(--text-secondary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+                e.currentTarget.style.color = "var(--text-muted)";
+              }}
+              aria-label="Upload documents"
+            >
+              <Plus size={18} strokeWidth={1.5} />
+            </button>
+          )}
 
-        <button
-          onClick={handleSubmit}
-          disabled={!canSend}
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg transition-colors duration-150 focus-visible:ring-1"
-          style={
-            {
+          {/* Text input */}
+          <input
+            ref={inputRef}
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask anything..."
+            className="min-w-0 flex-1 border-none bg-transparent font-body text-[14px] outline-none"
+            style={{
+              color: "var(--text-primary)",
+              paddingLeft: onUploadClick ? "0" : "16px",
+              paddingRight: "0",
+            }}
+            disabled={isStreaming}
+            aria-label="Message input"
+            id="chat-input"
+          />
+
+          {/* Send button */}
+          <button
+            onClick={handleSubmit}
+            disabled={!canSend}
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors duration-150"
+            style={{
               backgroundColor: canSend
                 ? "var(--accent)"
                 : "var(--bg-border)",
-              "--tw-ring-color": "var(--accent)",
-            } as React.CSSProperties
-          }
-          aria-label={isStreaming ? "Generating response" : "Send message"}
-          id="send-button"
-        >
-          {isStreaming ? (
-            <Loader2
-              size={18}
-              strokeWidth={1.5}
-              className="animate-spin"
-              style={{ color: "var(--accent)" }}
-            />
-          ) : (
-            <ArrowUp
-              size={18}
-              strokeWidth={1.5}
-              style={{
-                color: canSend
-                  ? "var(--bg-root)"
-                  : "var(--text-muted)",
-              }}
-            />
-          )}
-        </button>
+              marginRight: "8px",
+            }}
+            aria-label={
+              isStreaming ? "Generating response" : "Send message"
+            }
+            id="send-button"
+          >
+            {isStreaming ? (
+              <Loader2
+                size={16}
+                strokeWidth={1.5}
+                className="animate-spin"
+                style={{ color: "var(--accent)" }}
+              />
+            ) : (
+              <ArrowUp
+                size={16}
+                strokeWidth={1.5}
+                style={{
+                  color: canSend
+                    ? "var(--bg-root)"
+                    : "var(--text-muted)",
+                }}
+              />
+            )}
+          </button>
+        </div>
+
+        {/* Hint text */}
+        {showHint && (
+          <p
+            className="mt-2 text-center font-body text-[12px]"
+            style={{ color: "var(--text-muted)" }}
+          >
+            Eidos retrieves, evaluates, and only answers when confident.
+          </p>
+        )}
       </div>
     </div>
   );

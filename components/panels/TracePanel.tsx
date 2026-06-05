@@ -139,12 +139,13 @@ export default function TracePanel({ trace, activeNode }: TracePanelProps) {
                     delay: shouldReduceMotion ? 0 : index * 0.06,
                   }}
                   className="flex items-center gap-3 py-1"
+                  style={{ marginBottom: isLast ? 0 : 16 }}
                 >
                   {/* Icon + Connector column */}
                   <div className="relative flex flex-col items-center">
                     {/* Icon container */}
                     <div
-                      className="flex h-7 w-7 items-center justify-center rounded"
+                      className="flex h-7 w-7 items-center justify-center rounded relative z-10"
                       style={{ backgroundColor: iconBg }}
                     >
                       <IconComponent
@@ -157,10 +158,11 @@ export default function TracePanel({ trace, activeNode }: TracePanelProps) {
                     {/* Connector line */}
                     {!isLast && (
                       <motion.div
-                        className="w-[2px]"
+                        className="absolute w-[2px] z-0"
                         style={{
                           backgroundColor: connectorColor,
-                          height: 16,
+                          height: 24,
+                          top: 28,
                           transformOrigin: "top",
                         }}
                         initial={

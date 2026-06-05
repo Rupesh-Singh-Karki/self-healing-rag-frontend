@@ -114,8 +114,19 @@ body {
   border-radius: 4px;
 }
 
+/* Remove focus ring from text inputs and textareas */
+input:focus-visible,
+textarea:focus-visible {
+  box-shadow: none;
+}
+
 /* ─── Selection ─── */
 ::selection {
   background: var(--accent-dim);
   color: var(--text-primary);
+}
+
+/* ─── Buttons ─── */
+button, [role="button"] {
+  cursor: pointer;
 }
